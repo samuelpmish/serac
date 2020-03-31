@@ -16,7 +16,7 @@ stages:
 
 # Whether and how to update uberenv
 .run_update_uberenv: &run_update_uberenv |
-  [[ -n "${UPDATE_UBERENV}" ]] && ./scripts/ci/update-uberenv.sh "${UPDATE_UBERENV}"
+  [[ -n "${UPDATE_UBERENV}" ]] && ./scripts/gitlab/update-uberenv.sh "${UPDATE_UBERENV}"
 
 ####
 # Template
