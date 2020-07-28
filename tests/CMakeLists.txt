@@ -13,6 +13,7 @@ if (ENABLE_GTEST)
     set(test_dependencies solvers coefficients axom mpi mfem gtest)
 
     set(solver_tests
+        serac_constraints.cpp
         serac_dynamic_solver.cpp
         serac_linelastic_solver.cpp
         serac_quasistatic_solver.cpp
