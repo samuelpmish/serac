@@ -54,7 +54,7 @@ mfem::SparseMatrix sparse_matrix_from_tuples(std::vector<coo_entry> tuples, int 
       values[nnz] += value;
     }
   }
-  row_ptr[nrows] = nnz;
+  row_ptr[nrows] = nnz + 1;
 
   // mfem::SparseMatrix ctor assumes ownership,
   // so we don't deallocate rows, cols, or values
@@ -72,7 +72,7 @@ void must_contain(std::string haystack, std::string needle)
 std::string find(std::string haystack, std::vector<std::string> needles)
 {
   for (auto needle : needles) {
-    if (haystack.find(needle) == std::string::npos) {
+    if (haystack.find(needle) != std::string::npos) {
       return needle;
     }
   }
@@ -94,7 +94,9 @@ mfem::SparseMatrix read_matrix_market(std::string filename)
     must_contain(header, "coordinate");
 
     // detect the type of symmetry, if any
-    std::string type = find(header, {"general", "symmetric", "skew-symmetric"});
+    // note: find returns the first match,
+    // so it's important to put skew-symmetric before symmetric
+    std::string type = find(header, {"general", "skew-symmetric", "symmetric"});
 
     coo_entry              entry;
     std::vector<coo_entry> tuples;
@@ -114,21 +116,29 @@ mfem::SparseMatrix read_matrix_market(std::string filename)
           tuples.reserve(2 * nnz);
           uninitialized = false;
         } else {
+          // matrix market uses 1-based indexing
           ss >> entry.row;
+          entry.row--; 
           ss >> entry.col;
+          entry.col--;
           ss >> entry.value;
           tuples.push_back(entry);
 
-          if (type == "symmetric") {
-            tuples.push_back({entry.col, entry.row, entry.value});
+          if (entry.row != entry.col) { 
+            if (type == "symmetric") {
+              tuples.push_back({entry.col, entry.row, entry.value});
+            }
+
+            if (type == "skew-symmetric") {
+              tuples.push_back({entry.col, entry.row, -entry.value});
+            }
           }
 
-          if (type == "skew-symmetric") {
-            tuples.push_back({entry.col, entry.row, -entry.value});
-          }
         }
       }
     }
+
+    auto last = tuples.back();
 
     return sparse_matrix_from_tuples(tuples, nrows, ncols);
   } else {
@@ -372,12 +382,11 @@ struct LinearSystem {
 
 int main()
 {
-
   std::string prefix = std::string(SERAC_REPO_DIR) + "/data/matrices/";
 
   auto compare = [prefix](std::string suffix) {
     std::ofstream outfile(prefix + "output_" + suffix);
-    auto K = read_matrix_market(prefix + suffix);
+    auto          K = read_matrix_market(prefix + suffix);
     K.PrintMM(outfile);
     outfile.close();
   };
