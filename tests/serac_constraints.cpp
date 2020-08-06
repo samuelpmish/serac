@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <random>
 #include <string>
@@ -118,13 +119,13 @@ mfem::SparseMatrix read_matrix_market(std::string filename)
         } else {
           // matrix market uses 1-based indexing
           ss >> entry.row;
-          entry.row--; 
+          entry.row--;
           ss >> entry.col;
           entry.col--;
           ss >> entry.value;
           tuples.push_back(entry);
 
-          if (entry.row != entry.col) { 
+          if (entry.row != entry.col) {
             if (type == "symmetric") {
               tuples.push_back({entry.col, entry.row, entry.value});
             }
@@ -133,12 +134,9 @@ mfem::SparseMatrix read_matrix_market(std::string filename)
               tuples.push_back({entry.col, entry.row, -entry.value});
             }
           }
-
         }
       }
     }
-
-    auto last = tuples.back();
 
     return sparse_matrix_from_tuples(tuples, nrows, ncols);
   } else {
@@ -197,7 +195,7 @@ mfem::Vector random_vector(int n)
 
 mfem::SparseMatrix random_sparse_matrix(int nrows, int ncols, double density)
 {
-  // clip density value to be in the interval [~0.0, 1.0]
+  // clip density value to be in the interval (0.0, 1.0]
   double clipped_density = std::max(1.0e-8, std::min(density, 1.0));
 
   double                                        max_stepsize = (2.0 / clipped_density) - 1.0;
@@ -365,6 +363,7 @@ struct LinearSystem {
     outfile.close();
 
     outfile.open("f.vec");
+    outfile.precision(16);
     primary_constraint_.g_.Print(outfile);
     outfile.close();
 
@@ -374,13 +373,112 @@ struct LinearSystem {
       outfile.close();
 
       outfile.open("g" + std::to_string(i) + ".vec");
+      outfile.precision(16);
       auxiliary_constraints_[i].g_.Print(outfile);
       outfile.close();
     }
   }
 };
 
-int main()
+/*
+
+   A basic solver for systems of the form:
+
+   /                                      \ /      \     /      \
+   |  K       C1^T     C2^T   ...   CN^T  | |   u  |     |   f  |
+   |                                      | |      |     |      |
+   |  C1    -I / m1     0     ...    0    | |  y1  |     |  g1  |
+   |                                      | |      |     |      |
+   |  C2       0     -I / m2  ...    0    | |  y2  |     |  g2  |
+   |                                      | |      |  =  |      |
+   |  .        .        .     .      .    | |   .  |     |   .  |
+   |  .        .        .      .     .    | |   .  |     |   .  |
+   |  .        .        .       .    .    | |   .  |     |   .  |
+   |                                      | |      |     |      |
+   |  CN       0        0     ... -I / mN | |  yN  |     |  gN  |
+   \                                      / \      /     \      /
+
+   Eliminating the Lagrange multipliers {y1, y2, ... , yN} produces the
+   equivalent system of equations:
+
+            A u = b
+
+   where A := (K + m1 * C1^T * C1 + m2 * C2^T * C2 + ... + mN * CN^T * C)
+     and b := (f + m1 * C1^T * g1 + m2 * C2^T * g2 + ... + mN * CN^T * gN)
+
+*/
+
+mfem::Vector solve(LinearSystem& sys)
+{
+  mfem::Vector b = sys.primary_constraint_.g_;
+
+  mfem::Array<mfem::SparseMatrix*> A_terms(1);
+  A_terms[0] = &sys.primary_constraint_.C_;
+
+  double normA = sys.primary_constraint_.C_.MaxNorm();
+
+  std::string prefix = std::string(SERAC_REPO_DIR) + "/data/matrices/";
+  std::ofstream outfile;
+
+  int count = 0;
+  for (auto& [C, g, type] : sys.auxiliary_constraints_) {
+    if (type != Constraint::Type::Equality) {
+      std::cout << "only equality constraints are currently supported" << std::endl;
+      exit(1);
+    }
+
+    double normC   = C.MaxNorm();
+    double penalty = -1e5 * normA / (normC * normC);
+    auto*  CTC     = mfem::Mult(*mfem::Transpose(C), C);
+    std::cout << penalty << std::endl;
+    *CTC *= -penalty;
+    A_terms.Append(CTC);
+
+    outfile.open(prefix + "CTC" + std::to_string(count) + ".mtx");
+    CTC->PrintMM(outfile);
+    outfile.close();
+
+    mfem::Vector CTg(b.Size());
+    CTg = 0.0;
+    C.MultTranspose(g, CTg);
+
+    outfile.open(prefix + "CTg" + std::to_string(count++) + ".vec");
+    outfile.precision(16);
+    CTg.Print(outfile);
+    outfile.close();
+
+    b.Add(-penalty, CTg);
+  }
+
+  mfem::SparseMatrix* A = mfem::Add(A_terms);
+
+  outfile.open(prefix + "A.mtx");
+  A->PrintMM(outfile);
+  outfile.close();
+
+  outfile.open("b.vec");
+  outfile.precision(16);
+  b.Print(outfile);
+  outfile.close();
+
+  mfem::Vector x(A->NumCols());
+  x = 0.0;
+
+  mfem::GSSmoother M(*A);
+  mfem::PCG(*A, M, b, x, 1, 500, 1e-10, 0.0);
+
+  outfile.open("x.vec");
+  x.Print(outfile);
+  outfile.close();
+
+  for (int i = 1; i < A_terms.Size(); i++) {
+    delete A_terms[i];
+  }
+
+  return x;
+};
+
+void verify_matrix_market_io()
 {
   std::string prefix = std::string(SERAC_REPO_DIR) + "/data/matrices/";
 
@@ -395,15 +493,17 @@ int main()
   compare("bp_1200.mtx");
   compare("illc1033.mtx");
   compare("plsk1919.mtx");
-  compare("young1c.mtx");
+  compare("young1c.mtx");  // this matrix is complex-valued, we expect the import to fail
+}
 
-#if 0
-  auto K = read_sparse_matrix(std::string(SERAC_REPO_DIR) + "/data/K.mtx");
+int main()
+{
+  auto K = read_matrix_market(std::string(SERAC_REPO_DIR) + "/data/matrices/K.mtx");
   int  n = K.NumRows();
   auto f = random_vector(n);
 
   int  m = 10;
-  auto C = random_sparse_matrix(n, m, 0.5);
+  auto C = random_sparse_matrix(m, n, 0.1);
   auto g = random_vector(m);
 
   Unknown u{n};
@@ -416,12 +516,10 @@ int main()
   // e.g. Dirichlet boundary conditions (single dof)
   sys.append_constraint(u[{15, 32, 79, 91}] == vec(1.0, 2.0, 3.0, 4.0));
 
-  // e.g. no-slip condition ({2 or 3}-dof)
-  // sys.append_constraint(???);
-
   // e.g. contact, imcompressible flow/deformation (many dof)
   sys.append_constraint(C * u == g);
 
   sys.write_out();
-#endif
+
+  auto soln = solve(sys);
 }
