@@ -54,7 +54,8 @@ if (ENABLE_GTEST)
 
     set(language_tests
         copy_elision.cpp
-        entity_set.cpp)
+        entity_set.cpp
+        mfem_array_std_algo.cpp)
 
     foreach(filename ${language_tests})
         get_filename_component(test_name ${filename} NAME_WE)
