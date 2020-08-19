@@ -7,7 +7,7 @@
 /**
  * @file boundary_condition.hpp
  *
- * @brief This file contains the declaration of the boundary condition class
+ * @brief This file contains the declaration of the boundary condition class and associated entity sets
  */
 
 #ifndef BOUNDARY_CONDITION
@@ -23,6 +23,53 @@
 #include "common/serac_types.hpp"
 
 namespace serac {
+
+/**
+ * @brief Entity set interface for filtering DOFs over which boundary conditions are to be applied
+ */
+class EntitySet {
+public:
+  enum EntityType
+  {
+    Vertex,
+    Edge,
+    Face
+  };
+  /**
+   * @brief Constructs a set of edges given a FESpace
+   * and a filtering unary predicate
+   * @param space The FESpace (mesh + basis funcs) to search through
+   * @param type The type of entity whose DOFs should be included if the
+   * predicate is true (vertices, edges or faces)
+   * @param pred The predicate to filter with, must have the signature
+   * @code{.cpp}
+   * bool pred(const mfem::Element&);
+   * @endcode
+   */
+  template <typename UnaryPred>
+  EntitySet(const mfem::FiniteElementSpace& space, const EntityType type, UnaryPred pred);
+
+  /**
+   * @brief Returns the DOF indices
+   * corresponding to all the entities in the set
+   */
+  mfem::Array<int> dofs() const { return dofs_; };
+
+private:
+  /**
+   * @brief Private "setup" method for setting the DOF indices once a desired element are known
+   * @param space The FESpace (mesh + basis funcs) to search through
+   * @param type The type of entity whose DOFs should be included if the
+   * predicate is true (vertices, edges or faces)
+   * @param ele_idx The index of a desired element within the mesh
+   */
+  void setDofsFromElement(const mfem::FiniteElementSpace& space, const EntityType type, const int ele_idx);
+
+  /**
+   * @brief The DOF indices relative to the FESpace specified at construction time
+   */
+  mfem::Array<int> dofs_;
+};
 
 /**
  * @brief Boundary condition information bundle
@@ -215,6 +262,21 @@ std::unique_ptr<Integrator> BoundaryCondition::newIntegrator() const
   SLIC_ERROR_IF(!std::holds_alternative<std::shared_ptr<mfem::Coefficient>>(coef_),
                 "Boundary condition had a non-vector coefficient when constructing an integrator.");
   return std::make_unique<Integrator>(*std::get<std::shared_ptr<mfem::Coefficient>>(coef_));
+}
+
+template <typename UnaryPred>
+EntitySet::EntitySet(const mfem::FiniteElementSpace& space, const EntityType type, UnaryPred pred)
+{
+  const mfem::Mesh& mesh = *space.GetMesh();
+
+  for (int i = 0; i < mesh.GetNE(); i++) {
+    auto ele = mesh.GetElement(i);
+    if (pred(*ele)) {
+      // Do the rest in a different function to avoid unnecessary template
+      // code generation at compile time
+      setDofsFromElement(space, type, i);
+    }
+  }
 }
 
 }  // namespace serac

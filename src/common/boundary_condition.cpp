@@ -12,6 +12,52 @@
 
 namespace serac {
 
+void EntitySet::setDofsFromElement(const mfem::FiniteElementSpace& space, const EntityType type, const int ele_idx)
+{
+  const mfem::Mesh& mesh = *space.GetMesh();
+  mfem::Array<int>  entities;
+  mfem::Array<int>  orientation;
+
+  switch (type) {
+    case Vertex: {
+      mesh.GetElementVertices(ele_idx, entities);
+      break;
+    }
+    case Edge: {
+      mesh.GetElementEdges(ele_idx, entities, orientation);
+      break;
+    }
+    case Face: {
+      mesh.GetElementFaces(ele_idx, entities, orientation);
+      break;
+    }
+    default: {
+      SLIC_ERROR("Unrecognized entity type: " << type);
+    }
+  }
+
+  for (const auto index : entities) {
+    switch (type) {
+      case Vertex: {
+        space.GetVertexDofs(index, entities);
+        break;
+      }
+      case Edge: {
+        space.GetEdgeDofs(index, entities);
+        break;
+      }
+      case Face: {
+        space.GetFaceDofs(index, entities);
+        break;
+      }
+      default: {
+        SLIC_ERROR("Unrecognized entity type: " << type);
+      }
+    }
+    dofs_.Append(entities);
+  }
+}
+
 BoundaryCondition::BoundaryCondition(GeneralCoefficient coef, const int component, const std::set<int>& attrs,
                                      const int num_attrs)
     : coef_(coef), component_(component), markers_(num_attrs)

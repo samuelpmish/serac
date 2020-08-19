@@ -18,7 +18,8 @@ if (ENABLE_GTEST)
         serac_quasistatic_solver.cpp
         serac_thermal_solver.cpp
 	serac_thermal_structural_solver.cpp
-        serac_dtor.cpp)
+        serac_dtor.cpp
+        serac_entity_set.cpp)
 
     foreach(filename ${solver_tests})
         get_filename_component(test_name ${filename} NAME_WE)
@@ -54,7 +55,6 @@ if (ENABLE_GTEST)
 
     set(language_tests
         copy_elision.cpp
-        entity_set.cpp
         mfem_array_std_algo.cpp)
 
     foreach(filename ${language_tests})
