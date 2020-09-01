@@ -11,6 +11,7 @@ set(common_headers
     expr_template_ops.hpp
     finite_element_state.hpp
     initialize.hpp
+    matrix_expression.hpp
     serac_types.hpp
     logger.hpp
     mesh_utils.hpp

@@ -204,3 +204,30 @@ TEST(expr_templates, complex_expr_lambda)
     EXPECT_FLOAT_EQ(mfem_result[i], expr_result[i]);
   }
 }
+
+TEST(expr_templates, basic_matmat)
+{
+  constexpr int     rows = 10;
+  constexpr int     cols = 12;
+  mfem::Vector      vec_in(cols);
+  mfem::DenseMatrix A(rows, cols);
+  mfem::DenseMatrix B(cols, rows);
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      A(j, i) = 2 * (i == j) - (i == (j + 1)) - (i == (j - 1));
+      B(i, j) = 4 * (i == j) - (i == (j + 1)) - (i == (j - 1));
+    }
+  }
+
+  mfem::DenseMatrix mfem_result(rows, rows);
+  mfem::Mult(A, B, mfem_result);
+
+  mfem::DenseMatrix expr_result = A * B;
+
+  EXPECT_EQ(mfem_result.Size(), expr_result.Size());
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < rows; j++) {
+      EXPECT_FLOAT_EQ(mfem_result(i, j), expr_result(i, j));
+    }
+  }
+}

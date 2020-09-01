@@ -164,4 +164,9 @@ inline auto operator*(const mfem::Operator& A, mfem::Vector&& v)
   return serac::internal::OperatorExpr<mfem::Vector, true>(A, std::move(v));
 }
 
+inline auto operator*(const mfem::DenseMatrix& A, const mfem::DenseMatrix& B)
+{
+  return serac::internal::MatrixMult<mfem::DenseMatrix, mfem::DenseMatrix>(A, B);
+}
+
 #endif
