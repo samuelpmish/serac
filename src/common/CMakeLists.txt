@@ -7,6 +7,7 @@
 set(common_headers
     boundary_condition.hpp
     common.hpp
+    comptime_stuff.hpp
     finite_element_state.hpp
     initialize.hpp
     serac_types.hpp

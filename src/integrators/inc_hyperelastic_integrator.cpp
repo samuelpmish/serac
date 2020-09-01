@@ -8,6 +8,8 @@
 
 #include "common/profiling.hpp"
 
+#include "common/comptime_stuff.hpp"
+
 namespace serac {
 
 double IncrementalHyperelasticIntegrator::GetElementEnergy(const mfem::FiniteElement&   el,
@@ -63,6 +65,8 @@ void IncrementalHyperelasticIntegrator::AssembleElementVector(const mfem::Finite
   elvect.SetSize(dof * dim);
   PMatO_.UseExternalData(elvect.GetData(), dof, dim);
 
+  static constexpr auto pseudo_intrules = FixedIntRules<mfem::Geometry::Type::SEGMENT, 2>()();
+  static constexpr auto first_dshape = FixedElement<8,3, mfem::Geometry::Type::SEGMENT, 2>().dShape(pseudo_intrules[0]);
   const mfem::IntegrationRule* ir = IntRule;
   if (!ir) {
     ir = &(mfem::IntRules.Get(el.GetGeomType(), 2 * el.GetOrder() + 3));  // <---
