@@ -166,7 +166,16 @@ inline auto operator*(const mfem::Operator& A, mfem::Vector&& v)
 
 inline auto operator*(const mfem::DenseMatrix& A, const mfem::DenseMatrix& B)
 {
-  return serac::internal::MatrixMult<mfem::DenseMatrix, mfem::DenseMatrix>(A, B);
+  mfem::DenseMatrix result(A.Height(), B.Width());
+  mfem::Mult(A, B, result);
+  return result;
+}
+
+inline auto inv(const mfem::DenseMatrix& A)
+{
+  mfem::DenseMatrix result(A.Width(), A.Height());
+  mfem::CalcInverse(A, result);
+  return result;
 }
 
 #endif

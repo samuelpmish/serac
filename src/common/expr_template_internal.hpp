@@ -173,53 +173,89 @@ private:
   mfem::Vector           result_;
 };
 
-/**
- * @brief Derived VectorExpr class for representing the application of a binary
- * operator to two vectors
- * @tparam lhs The base vector type for the expression LHS, e.g., mfem::Vector,
- * or another VectorExpr
- * @tparam rhs The base vector type for the expression RHS, e.g., mfem::Vector,
- * or another VectorExpr
- * @tparam BinOp The type of the binary operator
- * @pre UnOp must be a functor with the following signature:
- * @code{.cpp}
- * double BinOp::operator()(const double lhs, const double rhs);
- * @endcode
- */
-template <typename lhs, typename rhs>
-class MatrixMult : public MatrixExpr<MatrixMult<lhs, rhs>> {
-public:
-  MatrixMult(const lhs& A, const rhs& B) : result_(A.Height(), B.Width())
-  {
-    // MFEM uses int to represent a size type, so cast to size_t for consistency
-    SLIC_ERROR_IF(static_cast<std::size_t>(A.Width()) != static_cast<std::size_t>(B.Height()),
-                  "Matrix mult LHS cols must equal RHS rows");
+// /**
+//  * @brief Derived MatrixExpr class for representing matrix multiplication
+//  * @tparam lhs The base matrix type for the expression LHS, e.g., mfem::DenseMatrix,
+//  * or another MatrixExpr
+//  * @tparam rhs The base matrix type for the expression RHS, e.g., mfem::DenseMatrix,
+//  * or another MatrixExpr
+//  * @note This class does not participate in lazy evaluation, that is, it
+//  * will perform the full operation (`mfem::Operator::Mult`) when the object
+//  * is constructed
+//  */
+// template <typename lhs, typename rhs>
+// class MatrixMult : public MatrixExpr<MatrixMult<lhs, rhs>> {
+// public:
+//   MatrixMult(const lhs& A, const rhs& B) : result_(A.Height(), B.Width())
+//   {
+//     // MFEM uses int to represent a size type, so cast to size_t for consistency
+//     SLIC_ERROR_IF(static_cast<std::size_t>(A.Width()) != static_cast<std::size_t>(B.Height()),
+//                   "Matrix mult LHS cols must equal RHS rows");
 
-    const mfem::DenseMatrix& A_mat = A;
-    const mfem::DenseMatrix& B_mat = B;
-    mfem::Mult(A_mat, B_mat, result_);
-  }
-  /**
-   * @brief Returns the fully evaluated value for the matrix
-   * expression at index @p i, @p j
-   * @param i The row index to evaluate at
-   * @param j The col index to evaluate at
-   */
-  double operator()(size_t i, size_t j) const { return result_(i, j); }
+//     const mfem::DenseMatrix& A_mat = A;
+//     const mfem::DenseMatrix& B_mat = B;
+//     mfem::Mult(A_mat, B_mat, result_);
+//   }
+//   /**
+//    * @brief Returns the fully evaluated value for the matrix
+//    * expression at index @p i, @p j
+//    * @param i The row index to evaluate at
+//    * @param j The col index to evaluate at
+//    */
+//   double operator()(size_t i, size_t j) const { return result_(i, j); }
 
-  /**
-   * @brief Returns the width (cols) of the matrix expression
-   */
-  size_t Width() const { return result_.Width(); }
+//   /**
+//    * @brief Returns the width (cols) of the matrix expression
+//    */
+//   size_t Width() const { return result_.Width(); }
 
-  /**
-   * @brief Returns the height (rows) of the matrix expression
-   */
-  size_t Height() const { return result_.Height(); }
+//   /**
+//    * @brief Returns the height (rows) of the matrix expression
+//    */
+//   size_t Height() const { return result_.Height(); }
 
-private:
-  mfem::DenseMatrix result_;
-};
+// private:
+//   mfem::DenseMatrix result_;
+// };
+
+// /**
+//  * @brief Derived MatrixExpr class for representing matrix inversion
+//  * @tparam lhs The base matrix type for the expression LHS, e.g., mfem::DenseMatrix,
+//  * or another MatrixExpr
+//  * @pre
+//  * @note This class does not participate in lazy evaluation, that is, it
+//  * will perform the full operation (`mfem::CalcInverse`) when the object
+//  * is constructed
+//  */
+// template <typename matrix>
+// class MatrixInv : public MatrixExpr<MatrixInv<matrix>> {
+// public:
+//   MatrixMult(const matrix& A) : result_(A.Width(), A.Height())
+//   {
+//     const mfem::DenseMatrix& A_mat = A;
+//     mfem::CalcInverse(A_mat, result_);
+//   }
+//   /**
+//    * @brief Returns the fully evaluated value for the matrix
+//    * expression at index @p i, @p j
+//    * @param i The row index to evaluate at
+//    * @param j The col index to evaluate at
+//    */
+//   double operator()(size_t i, size_t j) const { return result_(i, j); }
+
+//   /**
+//    * @brief Returns the width (cols) of the matrix expression
+//    */
+//   size_t Width() const { return result_.Width(); }
+
+//   /**
+//    * @brief Returns the height (rows) of the matrix expression
+//    */
+//   size_t Height() const { return result_.Height(); }
+
+// private:
+//   mfem::DenseMatrix result_;
+// };
 
 }  // namespace serac::internal
 

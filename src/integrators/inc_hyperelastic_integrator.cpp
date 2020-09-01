@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 
 #include "inc_hyperelastic_integrator.hpp"
+#include "common/expr_template_ops.hpp"
 
 namespace serac {
 
@@ -112,6 +113,7 @@ void IncrementalHyperelasticIntegrator::AssembleElementGrad(const mfem::FiniteEl
     const mfem::IntegrationPoint& ip = ir->IntPoint(i);
     Ttr.SetIntPoint(&ip);
     CalcInverse(Ttr.Jacobian(), Jrt_);
+    // Jrt_ = inv(Ttr.Jacobian());
 
     el.CalcDShape(ip, DSh_);
     Mult(DSh_, Jrt_, DS_);
