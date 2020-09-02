@@ -53,6 +53,7 @@ if (ENABLE_GTEST)
     endforeach()
 
     set(language_tests
+        mesh_generation.cpp
         copy_elision.cpp
         mfem_array_std_algo.cpp)
 

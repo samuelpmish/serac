@@ -35,6 +35,12 @@ namespace serac {
 std::shared_ptr<mfem::ParMesh> buildParallelMesh(const std::string& mesh_file, const int refine_serial = 0,
                                                  const int refine_parallel = 0, const MPI_Comm = MPI_COMM_WORLD);
 
+
+std::unique_ptr<mfem::Mesh> DiskMesh(int approx_number_of_elements);
+std::unique_ptr<mfem::Mesh> BallMesh(int approx_number_of_elements);
+std::unique_ptr<mfem::Mesh> CuboidMesh(int elements_in_x, int elements_in_y);
+std::unique_ptr<mfem::Mesh> CuboidMesh(int elements_in_x, int elements_in_y, int elements_in_z);
+
 }  // namespace serac
 
 #endif
