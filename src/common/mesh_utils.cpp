@@ -50,9 +50,11 @@ std::shared_ptr<mfem::ParMesh> buildParallelMesh(const std::string& mesh_file, c
   return par_mesh;
 }
 
-void squish(mfem::Mesh & mesh) {
+void squish(mfem::Mesh& mesh)
+{
   int num_vertices = mesh.GetNV();
-  int dim = mesh.SpaceDimension();
+  int dim          = mesh.SpaceDimension();
+
   mfem::Vector vertices;
   mesh.GetVertices(vertices);
   mfem::Vector vertex(dim);
@@ -71,7 +73,6 @@ void squish(mfem::Mesh & mesh) {
   }
   mesh.SetVertices(vertices);
 }
-
 
 std::unique_ptr<mfem::Mesh> DiskMesh(int approx_number_of_elements)
 {
@@ -113,9 +114,12 @@ std::unique_ptr<mfem::Mesh> BallMesh(int approx_number_of_elements)
   static constexpr int num_vertices          = 7;
   static constexpr int num_boundary_elements = 8;
 
-  static constexpr double vertices[num_vertices][dim] = {{0, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}, {0, -1, 0}, {1, 0, 0}};
-  static constexpr int    triangles[num_elems][3]     = {{4, 5, 6}, {4, 6, 2}, {4, 2, 1}, {4, 1, 5}, {5, 1, 3}, {5, 3, 6}, {3, 1, 2}, {6, 3, 2}};
-  static constexpr int    tetrahedra[num_elems][4]    = {{0, 4, 5, 6}, {0, 4, 6, 2}, {0, 4, 2, 1}, {0, 4, 1, 5}, {0, 5, 1, 3}, {0, 5, 3, 6}, {0, 3, 1, 2}, {0, 6, 3, 2}};
+  static constexpr double vertices[num_vertices][dim] = {{0, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, 0, -1},
+                                                         {0, 0, 1}, {0, -1, 0}, {1, 0, 0}};
+  static constexpr int    triangles[num_elems][3]     = {{4, 5, 6}, {4, 6, 2}, {4, 2, 1}, {4, 1, 5},
+                                                  {5, 1, 3}, {5, 3, 6}, {3, 1, 2}, {6, 3, 2}};
+  static constexpr int    tetrahedra[num_elems][4]    = {{0, 4, 5, 6}, {0, 4, 6, 2}, {0, 4, 2, 1}, {0, 4, 1, 5},
+                                                   {0, 5, 1, 3}, {0, 5, 3, 6}, {0, 3, 1, 2}, {0, 6, 3, 2}};
 
   auto mesh = std::make_unique<mfem::Mesh>(dim, num_vertices, num_elems, num_boundary_elements);
 
@@ -139,7 +143,7 @@ std::unique_ptr<mfem::Mesh> BallMesh(int approx_number_of_elements)
   return mesh;
 }
 
-std::unique_ptr<mfem::Mesh> CuboidMesh(int elements_in_x, int elements_in_y)
+std::unique_ptr<mfem::Mesh> RectangleMesh(int elements_in_x, int elements_in_y)
 {
   return std::make_unique<mfem::Mesh>(elements_in_x, elements_in_y, mfem::Element::QUADRILATERAL, true);
 }
