@@ -20,6 +20,6 @@
     "blueos_3_ppc64le_ib_p9":
     [ "clang@upstream_gfortran+devtools+cuda cuda_arch=70" ],
 
-    "darwin-x86_64":
+    "darwin":
     [ "apple-clang@10.0.1+devtools" ]
 }

@@ -16,7 +16,7 @@ jobs:
     DO_BUILD: 'yes'
     DO_TEST: 'yes'
     DO_CLEAN: 'no'
-    SYS_TYPE: 'darwin-x86_64'
+    SYS_TYPE: 'darwin'
     COMPILER: 'clang++'
     ON_DEVELOP: $[eq(variables['Build.SourceBranch'], 'refs/heads/develop')]
     ON_MAIN: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
