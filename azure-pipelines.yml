@@ -4,7 +4,49 @@
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 #
+parameters:
+- name: BUILD_MAC
+  default: false
+  type: boolean
+
 jobs:
+- job: OSX_Build_and_Test
+  variables:
+    DO_BUILD: 'yes'
+    DO_TEST: 'yes'
+    DO_CLEAN: 'no'
+    SYS_TYPE: 'darwin'
+    ON_DEVELOP: $[eq(variables['Build.SourceBranch'], 'refs/heads/develop')]
+    ON_MAIN: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+    IS_MERGE: $[or(variables.ON_DEVELOP, variables.ON_MAIN)]
+    RUN_MAC: $[or(variables.IS_MERGE, eq('${{ parameters.BUILD_MAC }}', true))]
+  condition: eq(variables.RUN_MAC, true)
+  pool:
+    vmImage: 'macOS-latest'
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+  - script:  |
+      ls
+      pwd
+      echo "./serac/scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls"
+      ./serac/scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls
+      ls 
+      pwd
+      echo "./serac/scripts/llnl/build_src.py"
+      ./serac/scripts/llnl/build_src.py
+      ls
+      pwd
+
+    displayName: '$(TEST_TARGET) Build & Test'
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'cTest'
+      testResultsFiles: '**/Test.xml'
+      testRunTitle: '$(TEST_TARGET) Tests'
+      failTaskOnFailedTests: true
+
 - job: Build_and_Test
   variables:
     DO_BUILD: 'yes'
