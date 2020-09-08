@@ -11,11 +11,13 @@ parameters:
 
 jobs:
 - job: OSX_Build_and_Test
+  # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md
   variables:
     DO_BUILD: 'yes'
     DO_TEST: 'yes'
     DO_CLEAN: 'no'
-    SYS_TYPE: 'darwin'
+    SYS_TYPE: 'darwin-x86_64'
+    COMPILER: 'clang++'
     ON_DEVELOP: $[eq(variables['Build.SourceBranch'], 'refs/heads/develop')]
     ON_MAIN: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
     IS_MERGE: $[or(variables.ON_DEVELOP, variables.ON_MAIN)]

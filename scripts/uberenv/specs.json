@@ -21,5 +21,5 @@
     [ "clang@upstream_gfortran+devtools+cuda cuda_arch=70" ],
 
     "darwin-x86_64":
-    [ "clang@9.0.0+devtools" ]
+    [ "apple-clang@10.0.1+devtools" ]
 }
