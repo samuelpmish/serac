@@ -18,7 +18,7 @@ jobs:
     DO_CLEAN: 'no'
     SYS_TYPE: 'darwin'
     COMPILER: 'clang++'
-    SPEC: 'apple-clang@10.0.1+devtools'
+    SPEC: '+devtools%apple-clang@10.0.1'
     ON_DEVELOP: $[eq(variables['Build.SourceBranch'], 'refs/heads/develop')]
     ON_MAIN: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
     IS_MERGE: $[or(variables.ON_DEVELOP, variables.ON_MAIN)]
