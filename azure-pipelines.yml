@@ -18,6 +18,7 @@ jobs:
     DO_CLEAN: 'no'
     SYS_TYPE: 'darwin'
     COMPILER: 'clang++'
+    SPEC: 'apple-clang@10.0.1+devtools'
     ON_DEVELOP: $[eq(variables['Build.SourceBranch'], 'refs/heads/develop')]
     ON_MAIN: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
     IS_MERGE: $[or(variables.ON_DEVELOP, variables.ON_MAIN)]
@@ -32,8 +33,8 @@ jobs:
   - script:  |
       ls
       pwd
-      echo "./scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls"
-      ./scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls
+      echo "./scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls --spec $(SPEC)"
+      ./scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls --spec $(SPEC)
       ls 
       pwd
       echo "./scripts/llnl/build_src.py"
