@@ -30,12 +30,12 @@ jobs:
   - script:  |
       ls
       pwd
-      echo "./serac/scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls"
-      ./serac/scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls
+      echo "./scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls"
+      ./scripts/llnl/build_tpls.py --directory $(Build.Repository.LocalPath)/../serac_tpls
       ls 
       pwd
-      echo "./serac/scripts/llnl/build_src.py"
-      ./serac/scripts/llnl/build_src.py
+      echo "./scripts/llnl/build_src.py"
+      ./scripts/llnl/build_src.py
       ls
       pwd
 
