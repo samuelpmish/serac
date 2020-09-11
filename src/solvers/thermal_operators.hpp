@@ -34,7 +34,7 @@ public:
    * @param[in] ess_bdr The essential boundary condition objects
    */
   DynamicConductionOperator(mfem::ParFiniteElementSpace& fe_space, const serac::LinearSolverParameters& params,
-                            std::vector<serac::BoundaryCondition>& ess_bdr);
+                            const BoundaryConditionManager& bcs);
 
   /**
    * @brief Set the mass and stiffness matrices
@@ -47,7 +47,7 @@ public:
   /**
    * @brief Set the thermal flux load vector
    *
-   * @param[in] The thermal flux (RHS vector)
+   * @param[in] rhs The thermal flux (RHS vector)
    */
   void setLoadVector(const mfem::Vector* rhs);
 
@@ -86,32 +86,27 @@ protected:
   /**
    * @brief Solver for the mass matrix
    */
-  EquationSolver M_solver_;
+  EquationSolver M_inv_;
 
   /**
    * @brief Solver for the T matrix
    */
-  EquationSolver T_solver_;
+  EquationSolver T_inv_;
 
   /**
    * @brief Non-owning pointer to the assembled M matrix
    */
-  const mfem::HypreParMatrix* M_mat_ = nullptr;
+  const mfem::HypreParMatrix* M_ = nullptr;
 
   /**
    * @brief Non-owning pointer to the assembled K matrix
    */
-  mfem::HypreParMatrix* K_mat_ = nullptr;
+  mfem::HypreParMatrix* K_ = nullptr;
 
   /**
    * @brief Pointer to the assembled T ( = M + dt K) matrix
    */
-  std::unique_ptr<mfem::HypreParMatrix> T_mat_;
-
-  /**
-   * @brief Pointer to the eliminated T matrix
-   */
-  std::unique_ptr<mfem::HypreParMatrix> T_e_mat_;
+  std::unique_ptr<mfem::HypreParMatrix> T_;
 
   /**
    * @brief Non-owning ptr to assembled RHS vector
@@ -126,7 +121,7 @@ protected:
   /**
    * @brief Temperature essential boundary coefficient
    */
-  std::vector<serac::BoundaryCondition>& ess_bdr_;
+  const BoundaryConditionManager& bcs_;
 
   /**
    * @brief Auxillary working vectors

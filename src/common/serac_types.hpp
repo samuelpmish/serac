@@ -54,7 +54,8 @@ enum class LinearSolver
 {
   CG,
   GMRES,
-  MINRES
+  MINRES,
+  SuperLU
 };
 
 /**
@@ -136,6 +137,9 @@ struct NonlinearSolverParameters {
   int print_level;
 };
 
+/**
+ * @brief A sum type for encapsulating either a scalar or vector coeffient
+ */
 using GeneralCoefficient = std::variant<std::shared_ptr<mfem::Coefficient>, std::shared_ptr<mfem::VectorCoefficient>>;
 
 }  // namespace serac

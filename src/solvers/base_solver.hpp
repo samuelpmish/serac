@@ -44,17 +44,6 @@ public:
   BaseSolver(std::shared_ptr<mfem::ParMesh> mesh, int n, int p);
 
   /**
-   * @brief Set the essential boundary conditions from a list of boundary markers and a coefficient
-   *
-   * @param[in] ess_bdr The set of essential BC attributes
-   * @param[in] ess_bdr_coef The essential BC value coefficient
-   * @param[in] fes The finite element state for the state
-   * @param[in] component The component to set (-1 implies all components are set)
-   */
-  virtual void setEssentialBCs(const std::set<int>& ess_bdr, serac::GeneralCoefficient ess_bdr_coef,
-                               FiniteElementState& state, const int component = -1);
-
-  /**
    * @brief Set a list of true degrees of freedom from a coefficient
    *
    * @param[in] true_dofs The true degrees of freedom to set with a Dirichlet condition
@@ -64,15 +53,6 @@ public:
   virtual void setTrueDofs(const mfem::Array<int>& true_dofs, serac::GeneralCoefficient ess_bdr_coef,
                            const int component = -1);
 
-  /**
-   * @brief Set the natural boundary conditions from a list of boundary markers and a coefficient
-   *
-   * @param[in] nat_bdr The set of mesh attributes denoting a natural boundary
-   * @param[in] nat_bdr_coef The coefficient defining the natural boundary function
-   * @param[in] component The component to set (-1 implies all components are set)
-   */
-  virtual void setNaturalBCs(const std::set<int>& nat_bdr, serac::GeneralCoefficient nat_bdr_coef,
-                             const int component = -1);
   /**
    * @brief Set the state variables from a vector of coefficients
    *
@@ -133,7 +113,7 @@ public:
   /**
    * @brief Advance the state variables according to the chosen time integrator
    *
-   * @param[in/out]
+   * @param[inout] dt The timestep to advance. For adaptive time integration methods, the actual timestep is returned.
    */
   virtual void advanceTimestep(double& dt) = 0;
 
@@ -176,16 +156,6 @@ protected:
    * @brief Block vector storage of the true state
    */
   std::unique_ptr<mfem::BlockVector> block_;
-
-  /**
-   * @brief Essential BC markers
-   */
-  std::vector<serac::BoundaryCondition> ess_bdr_;
-
-  /**
-   * @brief Natural BC markers
-   */
-  std::vector<serac::BoundaryCondition> nat_bdr_;
 
   /**
    * @brief Type of state variable output
@@ -246,6 +216,11 @@ protected:
    * @brief System solver instance
    */
   EquationSolver solver_;
+
+  /**
+   * @brief Boundary condition manager instance
+   */
+  BoundaryConditionManager bcs_;
 };
 
 }  // namespace serac

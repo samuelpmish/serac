@@ -17,8 +17,9 @@ if (ENABLE_GTEST)
         serac_linelastic_solver.cpp
         serac_quasistatic_solver.cpp
         serac_thermal_solver.cpp
-	serac_thermal_structural_solver.cpp
-        serac_dtor.cpp)
+        serac_thermal_structural_solver.cpp
+        serac_dtor.cpp
+        serac_boundary_cond.cpp)
 
     foreach(filename ${solver_tests})
         get_filename_component(test_name ${filename} NAME_WE)
@@ -55,6 +56,7 @@ if (ENABLE_GTEST)
     set(language_tests
         mesh_generation.cpp
         copy_elision.cpp
+        expr_templates.cpp
         mfem_array_std_algo.cpp)
 
     foreach(filename ${language_tests})
@@ -70,6 +72,19 @@ if (ENABLE_GTEST)
                      NUM_MPI_TASKS 1 )
     endforeach()
 
+    if(ENABLE_CUDA)
+        # CUDA smoke test
+        blt_add_library( NAME       serac_cuda_smoketest_kernel
+                         SOURCES    serac_cuda_smoketest_kernel.cpp 
+                         DEPENDS_ON cuda)
+        blt_add_executable( NAME       serac_cuda_smoketest
+                            SOURCES    serac_cuda_smoketest.cpp 
+                            OUTPUT_DIR ${TEST_OUTPUT_DIRECTORY}
+                            DEPENDS_ON serac_cuda_smoketest_kernel ${test_dependencies} cuda_runtime
+                            FOLDER      serac/tests)
+        blt_add_test( NAME          serac_cuda_smoketest
+                      COMMAND       serac_cuda_smoketest )
+    endif()
 
 endif()
 

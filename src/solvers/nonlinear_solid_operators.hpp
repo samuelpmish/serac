@@ -31,7 +31,8 @@ public:
    *
    * @param[in] H_form The nonlinear form of the PDE
    */
-  explicit NonlinearSolidQuasiStaticOperator(std::unique_ptr<mfem::ParNonlinearForm> H_form);
+  explicit NonlinearSolidQuasiStaticOperator(std::unique_ptr<mfem::ParNonlinearForm> H_form,
+                                             const BoundaryConditionManager&         bcs);
 
   /**
    * @brief Get the Gradient of the nonlinear form
@@ -64,6 +65,11 @@ protected:
    * @brief The linearized jacobian at the current state
    */
   mutable std::unique_ptr<mfem::Operator> Jacobian_;
+
+  /**
+   * @brief The boundary conditions
+   */
+  const BoundaryConditionManager& bcs_;
 };
 
 /**
@@ -85,8 +91,7 @@ public:
    * @param[in] ess_bdr The essential boundary conditions
    */
   NonlinearSolidReducedSystemOperator(const mfem::ParNonlinearForm& H_form, const mfem::ParBilinearForm& S_form,
-                                      mfem::ParBilinearForm&                       M_form,
-                                      const std::vector<serac::BoundaryCondition>& ess_bdr);
+                                      mfem::ParBilinearForm& M_form, const BoundaryConditionManager& bcs);
 
   /**
    * @brief Set current dt, v, x values - needed to compute action and Jacobian.
@@ -101,7 +106,7 @@ public:
    * @brief Compute y = H(x + dt (v + dt k)) + M k + S (v + dt k).
    *
    * @param[in] k The input state to evaluate the residual
-   * @param[out] y The output state to evalutae the residual
+   * @param[out] y The output state to evaluate the residual
    */
   virtual void Mult(const mfem::Vector& k, mfem::Vector& y) const;
 
@@ -146,7 +151,7 @@ private:
   double dt_;
 
   /**
-   * @brief The current displacement and velocity vectors
+   * @brief The current velocity and displacement vectors
    */
   const mfem::Vector *v_, *x_;
 
@@ -158,7 +163,7 @@ private:
   /**
    * @brief Essential degrees of freedom
    */
-  const std::vector<serac::BoundaryCondition>& ess_bdr_;
+  const BoundaryConditionManager& bcs_;
 };
 
 /**
@@ -176,11 +181,10 @@ public:
    * @param[in] newton_solver The newton solver object
    * @param[in] lin_params The linear solver parameters
    */
-  NonlinearSolidDynamicOperator(std::unique_ptr<mfem::ParNonlinearForm>      H_form,
-                                std::unique_ptr<mfem::ParBilinearForm>       S_form,
-                                std::unique_ptr<mfem::ParBilinearForm>       M_form,
-                                const std::vector<serac::BoundaryCondition>& ess_bdr,
-                                mfem::IterativeSolver& newton_solver, const serac::LinearSolverParameters& lin_params);
+  NonlinearSolidDynamicOperator(std::unique_ptr<mfem::ParNonlinearForm> H_form,
+                                std::unique_ptr<mfem::ParBilinearForm>  S_form,
+                                std::unique_ptr<mfem::ParBilinearForm> M_form, const BoundaryConditionManager& bcs,
+                                EquationSolver& newton_solver, const serac::LinearSolverParameters& lin_params);
 
   /**
    * @brief Evaluate the explicit time derivative
@@ -230,7 +234,7 @@ protected:
   /**
    * @brief The CG solver for the mass matrix
    */
-  EquationSolver M_solver_;
+  EquationSolver M_inv_;
 
   /**
    * @brief The reduced system operator for applying the bilinear and nonlinear forms
@@ -240,12 +244,12 @@ protected:
   /**
    * @brief The Newton solver for the nonlinear iterations
    */
-  mfem::IterativeSolver& newton_solver_;
+  EquationSolver& newton_solver_;
 
   /**
    * @brief The fixed boudnary degrees of freedom
    */
-  const std::vector<serac::BoundaryCondition>& ess_bdr_;
+  const BoundaryConditionManager& bcs_;
 
   /**
    * @brief The linear solver parameters for the mass matrix
