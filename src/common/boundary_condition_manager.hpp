@@ -133,7 +133,7 @@ private:
 // Deduction guide - iterator and lambda types must be deduced, so
 // this mitigates a "builder" function
 template <class Iter, class Pred>
-FilterView(Iter, Iter, Pred &&) -> FilterView<Iter, Pred>;
+FilterView(Iter, Iter, Pred &&)->FilterView<Iter, Pred>;
 
 class BoundaryConditionManager {
 public:
